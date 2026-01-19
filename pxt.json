@@ -9,7 +9,13 @@
     "files": [
         "main.blocks",
         "main.ts",
-        "README.md"
+        "README.md",
+        "extension.ts",
+        "extension.cpp",
+        "sources/MicroBitDisplayCustom.cpp",
+        "sources/MicroBitDisplayCustom.h",
+        "sources/NRF52LedMatrixCustom.cpp",
+        "sources/NRF52LedMatrixCustom.h"
     ],
     "testFiles": [
         "test.ts"
@@ -20,6 +26,8 @@
     },
     "supportedTargets": [
         "microbit"
+    ],"disablesVariants": [
+        "mbdal"
     ],
     "preferredEditor": "blocksprj"
 }
