@@ -278,8 +278,12 @@ void NRF52LEDMatrixCustom::render()
                
                 int flatIndex = (row * 5) + column;
                 
+                if(screenBuffer[flatIndex] == 255){
+                    colData[row] = true ;
+                }else{
+                    colData[row] = false;
+                }
                 
-                colData[row] = screenBuffer[flatIndex];
             }
 
             uint32_t output = PORT0_OUT;
@@ -304,9 +308,7 @@ void NRF52LEDMatrixCustom::render()
             PORT0_OUT = output;
         }
 
-        // Enable the drive pin, and start the timer.
-        matrixMap.rowPins[strobeRow]->setDigitalValue(1);
-    }
+        
     else
     {
         // Perform Light sensing. This is tricky, as we need to reconfigure the timer, PPI and GPIOTE channels to
@@ -324,10 +326,10 @@ void NRF52LEDMatrixCustom::render()
             matrixMap.columnPins[column]->setDigitalValue(1);
         }
 
-        // Pull the sense pin low 
+        
         matrixMap.rowPins[0]->setDigitalValue(0);
 
-        // Configure GPIOTE and PPI to measure the sense pin rise time.
+        
         NRF_GPIOTE->CONFIG[gpiote[0]] = 0x00010001 | (matrixMap.rowPins[0]->name << 8);
         NRF_PPI->CH[ppi[0]].EEP = (uint32_t) &NRF_GPIOTE->EVENTS_IN[gpiote[0]];
         NRF_PPI->CH[ppi[0]].TEP = (uint32_t) &timer.timer->TASKS_CAPTURE[1];
