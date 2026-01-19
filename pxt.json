@@ -10,6 +10,7 @@
         "main.blocks",
         "main.ts",
         "shims.d.ts",
+        "enums.d.ts",
         "README.md",
         "extension.ts",
         "extension.cpp",
