@@ -272,7 +272,7 @@ void NRF52LEDMatrixCustom::render()
             // No need to deal with rotation
 			value = screenBuffer[ p->y * width + p->x];
 
-            value = value * quantum;
+           
             timer.timer->CC[column+1] = value;
             for (int row = 0; row < 5; row++) {
                
