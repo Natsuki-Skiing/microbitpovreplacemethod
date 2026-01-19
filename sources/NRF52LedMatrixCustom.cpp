@@ -42,22 +42,7 @@ static NRF52LEDMatrixCustom *instance = NULL;
 static uint32_t rowMask[5];
 
 
-static void setLEDS(uint32_t colData[5]){
-    uint32_t output = PORT0_OUT;
 
-    output &= ~(rowMask[0] | rowMask[1] | rowMask[2] | rowMask[3] | rowMask[4]);
-
-    // Set bits for letter
-    if(colData[0]) output |= rowMask[0];
-    if(colData[1]) output |= rowMask[1];
-    if(colData[2]) output |= rowMask[2];
-    if(colData[3]) output |= rowMask[3];
-    if(colData[4]) output |= rowMask[4];
-
-    output &= ~(1u << COL_3);
-
-    PORT0_OUT = output;
-}
 
 static void display_irq(uint16_t mask)
 {
@@ -266,42 +251,57 @@ void NRF52LEDMatrixCustom::render()
 
     // Move on to the next row.
     strobeRow = (strobeRow + 1) % timeslots;
-
+    uint8_t colData [5];
     if(strobeRow < matrixMap.rows)
     {
         // Common case - configure timer values.
         MatrixPoint *p = (MatrixPoint *)matrixMap.map + strobeRow;
-        for (int column = 0; column < matrixMap.columns; column++)
+        // uint8_t bufferSize = sizeof(uint8_t) / sizeof(screenBuffer[0]);
+        uint8_t bufferSize = 5;
+        uBit.serial.printf("%d\r\n", bufferSize);
+
+        for (int column = 0; column < bufferSize; column++)
         {
             
             
             //WILL 
             // Clip pixels to full or zero brightness ignore display mode , need for POV
             
-            value = value ? 255 : 0;
+            
             //WILL
             // No need to deal with rotation
 			value = screenBuffer[ p->y * width + p->x];
 
             value = value * quantum;
             timer.timer->CC[column+1] = value;
-            
-            //Preparing the row mask 
-            rowMask[0] = (1u << ROW_1);
-            rowMask[1] = (1u << ROW_2);
-            rowMask[2] = (1u << ROW_3);
-            rowMask[3] = (1u << ROW_4);
-            rowMask[4] = (1u << ROW_5);
+            for (int row = 0; row < 5; row++) {
+               
+                int flatIndex = (row * 5) + column;
+                
+                
+                colData[row] = screenBuffer[flatIndex];
+            }
 
-            PORT0_DIR |= (rowMask[0] | rowMask[1] | rowMask[2] | rowMask[3] | rowMask[4] | (1u << COL_3));
-    
-            // Set the initial polarity of the column output to HIGH if the pixel brightness is >0. LOW otherwise.
-            if (value)
-                NRF_GPIOTE->CONFIG[gpiote[column]] &= ~0x00100000;
-            else
-                NRF_GPIOTE->CONFIG[gpiote[column]] |= 0x00100000;
+            uint32_t output = PORT0_OUT;
+
+            output &= ~(rowMask[0] | rowMask[1] | rowMask[2] | rowMask[3] | rowMask[4]);
             
-            p += matrixMap.rows;
+            
+            if(colData[0]) output |= rowMask[0];
+            if(colData[1]) output |= rowMask[1];
+            if(colData[2]) output |= rowMask[2];
+            if(colData[3]) output |= rowMask[3];
+            if(colData[4]) output |= rowMask[4];
+
+            output &= ~(1u << COL_3);
+
+            PORT0_OUT = output;
+            // // Set the initial polarity of the column output to HIGH if the pixel brightness is >0. LOW otherwise.
+            // if (value)
+            //     NRF_GPIOTE->CONFIG[gpiote[column]] &= ~0x00100000;
+            // else
+            //     NRF_GPIOTE->CONFIG[gpiote[column]] |= 0x00100000;
+            PORT0_OUT = output;
         }
 
         // Enable the drive pin, and start the timer.

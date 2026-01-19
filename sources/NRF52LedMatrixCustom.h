@@ -27,6 +27,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "MicroBitCompat.h"
 #include "NRFLowLevelTimer.h"
+#include "pxt.h"
 
 #define NRF52_LED_MATRIX_CUSTOM_CLOCK_FREQUENCY        16000000            // Frequency of underlying hardware clock (must b 1MHz, 2Mhz 4Mhz, 8Mhz or 16MHz)
 #define NRF52_LED_MATRIX_CUSTOM_FREQUENCY              60                  // Frequency of the frame update for the display

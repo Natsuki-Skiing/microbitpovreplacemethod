@@ -28,8 +28,9 @@
     },
     "supportedTargets": [
         "microbit"
-    ],"disablesVariants": [
-        "mbdal"
     ],
-    "preferredEditor": "blocksprj"
+    "preferredEditor": "tsprj",
+    "disablesVariants": [
+        "mbdal"
+    ]
 }
