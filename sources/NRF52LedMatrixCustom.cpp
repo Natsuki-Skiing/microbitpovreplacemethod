@@ -31,10 +31,33 @@ DEALINGS IN THE SOFTWARE.
 #include "NRF52Pin.h"
 #include "CodalDmesg.h"
 #include "ErrorNo.h"
+#include "pxt.h"
+
+#define PORT0_OUT       (*(volatile uint32_t *)0x50000504)
+#define PORT0_DIR       (*(volatile uint32_t *)0x50000514)
 
 using namespace codal;
 
 static NRF52LEDMatrixCustom *instance = NULL;
+static uint32_t rowMask[5];
+
+
+static void setLEDS(uint32_t colData[5]){
+    uint32_t output = PORT0_OUT;
+
+    output &= ~(rowMask[0] | rowMask[1] | rowMask[2] | rowMask[3] | rowMask[4]);
+
+    // Set bits for letter
+    if(colData[0]) output |= rowMask[0];
+    if(colData[1]) output |= rowMask[1];
+    if(colData[2]) output |= rowMask[2];
+    if(colData[3]) output |= rowMask[3];
+    if(colData[4]) output |= rowMask[4];
+
+    output &= ~(1u << COL_3);
+
+    PORT0_OUT = output;
+}
 
 static void display_irq(uint16_t mask)
 {
@@ -120,7 +143,6 @@ void NRF52LEDMatrixCustom::setDisplayMode(DisplayMode mode)
 
     this->mode = mode;
 }
-
 /**
  * Retrieves the mode of the display.
  *
@@ -249,38 +271,30 @@ void NRF52LEDMatrixCustom::render()
     {
         // Common case - configure timer values.
         MatrixPoint *p = (MatrixPoint *)matrixMap.map + strobeRow;
-
         for (int column = 0; column < matrixMap.columns; column++)
         {
-            switch ( this->rotation)
-            {
-              case MATRIX_DISPLAY_ROTATION_0:
-                value = screenBuffer[ p->y * width + p->x];
-                break;
-              case MATRIX_DISPLAY_ROTATION_90:
-                value = screenBuffer[ p->x * width + width - 1 - p->y];
-                break;
-              case MATRIX_DISPLAY_ROTATION_180:
-                value = screenBuffer[ (height - 1 - p->y) * width + width - 1 - p->x];
-                break;
-              case MATRIX_DISPLAY_ROTATION_270:
-                value = screenBuffer[ ( height - 1 - p->x) * width + p->y];
-                break;
-              default:
-                value = screenBuffer[ p->y * width + p->x];
-                break;
-            }
-
-            // Clip pixels to full or zero brightness if in black and white mode.
-            if (mode == DISPLAY_MODE_BLACK_AND_WHITE || mode == DISPLAY_MODE_BLACK_AND_WHITE_LIGHT_SENSE)
-                value = value ? 255 : 0;
-
-			// [CHANGED] Invert the display
-			value = 255 - value;
+            
+            
+            //WILL 
+            // Clip pixels to full or zero brightness ignore display mode , need for POV
+            
+            value = value ? 255 : 0;
+            //WILL
+            // No need to deal with rotation
+			value = screenBuffer[ p->y * width + p->x];
 
             value = value * quantum;
             timer.timer->CC[column+1] = value;
+            
+            //Preparing the row mask 
+            rowMask[0] = (1u << ROW_1);
+            rowMask[1] = (1u << ROW_2);
+            rowMask[2] = (1u << ROW_3);
+            rowMask[3] = (1u << ROW_4);
+            rowMask[4] = (1u << ROW_5);
 
+            PORT0_DIR |= (rowMask[0] | rowMask[1] | rowMask[2] | rowMask[3] | rowMask[4] | (1u << COL_3));
+    
             // Set the initial polarity of the column output to HIGH if the pixel brightness is >0. LOW otherwise.
             if (value)
                 NRF_GPIOTE->CONFIG[gpiote[column]] &= ~0x00100000;
