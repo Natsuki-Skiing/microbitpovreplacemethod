@@ -309,7 +309,7 @@ void NRF52LEDMatrixCustom::render()
         }
 
         
-    else
+    }else
     {
         // Perform Light sensing. This is tricky, as we need to reconfigure the timer, PPI and GPIOTE channels to
         // sense and capture the voltage on the LED rows, rather than drive them.
